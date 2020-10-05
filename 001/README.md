@@ -1,3 +1,4 @@
+# IMDB爬虫任务结题总结报告
 # 1 任务要求
 调用python的selenium库采集[IMDB](https://imdb.com/ "IMDB")网站中的指定影评与对应影评者的相关信息。
 - 指定影评id文件：[下载](https://file.zhihuishu.com/zhs/ablecommons/demo/202009/38ed4929a18848e6b804e59b3e7b05f2.txt "下载")
@@ -70,6 +71,7 @@ WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.ID, 'sidebar'
 # 3 如何加快爬取速度
 ### 3.1 分布式
 ![](https://image.zhihuishu.com/zhs/ablecommons/demo/202009/e1992319b6d34e34a96c8f32649489fc.png)
+
 **3.1.1 意义：通过增加爬取主机的数量提升爬取速度**
 
 **3.1.2 思路：**
