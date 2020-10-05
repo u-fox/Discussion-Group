@@ -67,4 +67,4 @@
 
 ### 搭建
 
-[A Program for Aligning Sentences in Bilingual Corpora](
+[A Program for Aligning Sentences in Bilingual Corpora](https://www.aclweb.org/anthology/J93-1004.pdf)
