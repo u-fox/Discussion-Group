@@ -19,7 +19,7 @@
 
 ##### 文本对齐
 
-[From the Rosetta stone to the information society](http://proxy.qsclub.cn/index.php?_proxurl=aHR0cDovL2NpdGVzZWVyeC5pc3QucHN1LmVkdS92aWV3ZG9jL2Rvd25sb2FkP2RvaT0xMC4xLjEuMTMuNTI0MCZyZXA9cmVwMSZ0eXBlPXBkZg%3D%3D&_proxfl=1eb)
+[From the Rosetta stone to the information society](http://p2.qsclub.cn/bak/index.php?_proxurl=aHR0cDovL2NpdGVzZWVyeC5pc3QucHN1LmVkdS92aWV3ZG9jL2Rvd25sb2FkP2RvaT0xMC4xLjEuMTMuNTI0MCZyZXA9cmVwMSZ0eXBlPXBkZg%3D%3D&_proxfl=1eb)
 
 这篇文章主要介绍了平行文本的处理与使用。分为三个部分：
 
@@ -61,7 +61,7 @@
 
 [Ancient-Modern Chinese Translation with a New Large Training Dataset](https://arxiv.org/pdf/1808.03738.pdf)中将句子划分更细
 
-### 第二篇文章：[Chinese Ancient-Modern Sentence Alignment](http://proxy.qsclub.cn/index.php?_proxurl=aHR0cHM6Ly93d3cucmVzZWFyY2hnYXRlLm5ldC9wdWJsaWNhdGlvbi8yMjA4NTkyNTZfQ2hpbmVzZV9BbmNpZW50LU1vZGVybl9TZW50ZW5jZV9BbGlnbm1lbnQ%3D&_proxfl=1eb)
+### 第二篇文章：[Chinese Ancient-Modern Sentence Alignment](http://p2.qsclub.cn/bak/index.php?_proxurl=aHR0cHM6Ly93d3cucmVzZWFyY2hnYXRlLm5ldC9wdWJsaWNhdGlvbi8yMjA4NTkyNTZfQ2hpbmVzZV9BbmNpZW50LU1vZGVybl9TZW50ZW5jZV9BbGlnbm1lbnQ%3D&_proxfl=1eb)
 
 本文主要研究n-m对齐模式（多对多）
 
