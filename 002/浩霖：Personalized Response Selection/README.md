@@ -1,4 +1,6 @@
 # Personalized Response Selection
+[原文链接](https://zhuanlan.zhihu.com/p/262010099)  
+
 根本目的：为了使对话机器人更具有个人特色（个性），或者指定一种角色，使聊天机器人变得有趣进而对用户更有吸引力。
 
 ### 1.Task Definition
