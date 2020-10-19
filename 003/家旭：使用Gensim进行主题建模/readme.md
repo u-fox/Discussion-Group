@@ -64,7 +64,7 @@ Latent Dirichlet Allocation（LDA）是一种流行的主题建模算法，在Py
 ## 2.先决条件(Prerequisites) - 下载nltk停用词和spacy模型
 我们需要来自NLTK的`stopwords`和spacy的`en模型`进行文本预处理。稍后，我们将使用spacy模型进行词形还原。
 
-词形还原只不过是将一个词转换为词根。例如：“machines”这个词的lemma是“machines”。同样，'walking'->'walk'，'mice'->'mouse'等等。
+词形还原(Lemmatization)只不过是将一个词转换为词根。例如：“machines”这个词的原型是“machine”。同样，'walking'->'walk'，'mice'->'mouse'等等。
 
 ## 3.导入包（Import Packages）
 在本例中使用的核心包是`re`，`gensim`，`spacy`和`pyLDAvis`。  
