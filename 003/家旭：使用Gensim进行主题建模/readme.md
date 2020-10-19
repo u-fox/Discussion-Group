@@ -1,12 +1,52 @@
+# 说明
+本周对此任务的示例文件做了分析，了解学习了其中提到的一些模型概念及库：
+- [LDA潜在狄利克雷分布模型](https://blog.csdn.net/aws3217150/article/details/53840029)
+- [Gensim基础——语料库与向量空间](https://blog.csdn.net/questionfish/article/details/46739207)
+- [tf-idf](https://blog.csdn.net/zrc199021/article/details/53728499)
+- [词袋模型和词向量模型](https://www.cnblogs.com/chenyusheng0803/p/10978883.html)
+- [词形还原（Lemmatization）](https://www.jianshu.com/p/79255fe0c5b5)
+- [spacy分词，命名实体识别，词性识别等](https://www.jianshu.com/p/e6b3565e159d)
+- [Word2Vec-知其然知其所以然](https://www.zybuluo.com/Dounm/note/591752)
+- [GuidedLDA详解](https://zhuanlan.zhihu.com/p/213841493)
 
-# 使用Gensim进行主题建模（Topic Modeling with Gensim）
+并参照文章[Topic Modeling with Gensim](https://www.machinelearningplus.com/nlp/topic-modeling-gensim-python)对代码做出注释。
 
-主题建模是一种从大量文本中提取隐藏主题的技术。Latent Dirichlet Allocation（LDA）是一种流行的主题建模算法，在Python的Gensim包中具有出色的实现。  
-然而，挑战在于如何提取清晰，隔离和有意义的高质量主题。这在很大程度上取决于文本预处理的质量以及找到最佳主题数量的策略，本教程试图解决这两个问题。
+# 使用Gensim进行主题建模（[Topic Modeling with Gensim](https://www.machinelearningplus.com/nlp/topic-modeling-gensim-python)）
 
+
+主题建模是一种从大量文本中提取隐藏主题的技术。  
+
+Latent Dirichlet Allocation（LDA）是一种流行的主题建模算法，在Python的Gensim包中具有出色的实现。  
+
+然而，挑战在于**如何提取清晰的(clear)，分离的(segregated)和有意义(meaningful)的高质量主题** 。这在很大程度上取决于两点:
+
+- 文本预处理的质量
+- 找到最佳主题数量的策略
+
+本教程试图解决这两个问题。
 
 ## 0.目录
-[TOC]
+1. 简介
+2. 先决条件--下载nltk停用词和spacy模型
+3. 导入包
+4. LDA做什么？
+5. 准备好停用词
+6. 导入数据
+7. DataFrame转list
+8. 标记单词和清理文本
+9. 创建Bigram和Trigram模型
+10. 删除停用词，制作Bigrams和词形还原
+11. 创建主题建模所需的词典和语料库
+12. 构建主题模型
+13. 查看LDA模型中的主题
+14. 计算模型复杂度和相干性分数
+15. topics-keywords可视化
+16. 构建LDA Mallet模型
+17. 如何找到LDA的最佳主题数量？
+18. 在每个句子中找到主要话题
+19. 找到每个主题最具代表性的文档
+20. 将主题分发给各文档
+21. 总结
 
 ## 1.简介(Introduction)
 自然语言处理的主要应用之一是**从大量文本中自动提取人们正在讨论的主题**。大量文本的一些示例可以是来自社交媒体的馈送，酒店的客户评论，电影等，用户反馈，新闻报道，客户投诉的电子邮件等。
@@ -80,22 +120,6 @@ import seaborn as sb
 from lda import guidedlda as glda
 from lda import glda_datasets as gldad
 ```
-
-
-    ---------------------------------------------------------------------------
-
-    ModuleNotFoundError                       Traceback (most recent call last)
-
-    <ipython-input-1-66902323297f> in <module>
-         25 
-         26 # Plotting tools
-    ---> 27 import pyLDAvis
-         28 import pyLDAvis.gensim  # don't skip this
-         29 import matplotlib.pyplot as plt
-    
-
-    ModuleNotFoundError: No module named 'pyLDAvis'
-
 
 ## 4. LDA做什么？（What does LDA do?）
 在`LDA主题建模方法`中，`document（文档）`是`topics（主题）`按一定比例构成的集合，并且每个`topic`是`keywords（关键字）`按一定比例构成的集合。  
@@ -616,7 +640,7 @@ df_dominant_topic.columns = ['Document_No', 'Dominant_Topic', 'Topic_Perc_Contri
 df_dominant_topic.head(10)
 ```
 
-## 19.找到每个主题最具代表性的文件（Find the most representative document for each topic）
+## 19.找到每个主题最具代表性的文档（Find the most representative document for each topic）
 有时，主题关键字(topic keywords)可能不足以理解主题的含义。因此，为了帮助理解该主题，您可以找到给定主题最有代表性的的文档(document)，并通过阅读该文档来推断该主题。
 
 
