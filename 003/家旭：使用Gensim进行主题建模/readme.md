@@ -23,7 +23,7 @@ Latent Dirichlet Allocation（LDA）是一种流行的主题建模算法，在Py
 - 文本预处理的质量
 - 找到最佳主题数量的策略
 
-本教程试图解决这两个问题。
+本例试图解决这两个问题。
 
 ## 0.目录
 1. 简介
@@ -64,7 +64,7 @@ Latent Dirichlet Allocation（LDA）是一种流行的主题建模算法，在Py
 ## 2.先决条件(Prerequisites) - 下载nltk停用词和spacy模型
 我们需要来自NLTK的`stopwords`和spacy的`en模型`进行文本预处理。稍后，我们将使用spacy模型进行词形还原。
 
-词形还原只不过是将一个词转换为词根。例如：“machines”这个词的lemma是“machines”。同样，'walking'->'walk'，'mice'->'mouse'等等。
+词形还原(Lemmatization)只不过是将一个词转换为词根。例如：“machines”这个词的原型是“machine”。同样，'walking'->'walk'，'mice'->'mouse'等等。
 
 ## 3.导入包（Import Packages）
 在本例中使用的核心包是`re`，`gensim`，`spacy`和`pyLDAvis`。  
@@ -133,7 +133,7 @@ Q:当我说主题时，它实际上是什么？以及如何表示？
 A:一个主题只不过是典型代表的**主导关键词(dominant keywords)** 集合。
 只需查看关键字，您就可以确定主题的内容。 
 
-以下是获得良好**分离主题(segregation topics)**的关键因素：
+以下是获得良好**分离主题(segregation topics)** 的关键因素：
 - 文本处理的质量。
 - 文本谈论的各种主题。
 - 主题建模算法的选择。
@@ -321,7 +321,7 @@ lda_model.save('model10.gensim')
 
 ## 13.查看LDA模型中的主题（View the topics in LDA model）
 
-其中每个topic是keyword的组合，并且每个keyword对topic贡献一定的**权重(weightage)**。
+其中每个topic是keyword的组合，并且每个keyword对topic贡献一定的**权重(weightage)** 。
 
 您可以使用`lda_model.print_topics()`看到每个topic的keyword以及每个keyword的权重 ，如下所示。
 
