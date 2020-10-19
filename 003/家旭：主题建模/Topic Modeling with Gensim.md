@@ -6,26 +6,7 @@
 
 
 ## 0.目录
-1. 简介
-2. 先决条件--下载nltk停用词和spacy模型
-3. 导入包
-4. LDA做什么？
-5. 准备停用词
-6. 导入数据
-7. DataFrame转list
-8. 标记单词和清理文本
-9. 创建Bigram和Trigram模型
-10. 删除停用词，制作双字母组合词和词形变换
-11. 创建所需的词典和语料库主题建模
-12. 构建主题模型
-13. 查看LDA模型中的主题
-14. 计算模型复杂度和相干性分数
-15. 可视化topic-keywords
-16. 构建LDA Mallet模型
-17. 如何找到LDA的最佳主题数？
-18. 在每个句子中找到主要主题
-19. 为每个主题找到最具代表性的文件
-20. 跨文件分配主题
+[TOC]
 
 ## 1.简介(Introduction)
 自然语言处理的主要应用之一是**从大量文本中自动提取人们正在讨论的主题**。大量文本的一些示例可以是来自社交媒体的馈送，酒店的客户评论，电影等，用户反馈，新闻报道，客户投诉的电子邮件等。
@@ -99,6 +80,22 @@ import seaborn as sb
 from lda import guidedlda as glda
 from lda import glda_datasets as gldad
 ```
+
+
+    ---------------------------------------------------------------------------
+
+    ModuleNotFoundError                       Traceback (most recent call last)
+
+    <ipython-input-1-66902323297f> in <module>
+         25 
+         26 # Plotting tools
+    ---> 27 import pyLDAvis
+         28 import pyLDAvis.gensim  # don't skip this
+         29 import matplotlib.pyplot as plt
+    
+
+    ModuleNotFoundError: No module named 'pyLDAvis'
+
 
 ## 4. LDA做什么？（What does LDA do?）
 在`LDA主题建模方法`中，`document（文档）`是`topics（主题）`按一定比例构成的集合，并且每个`topic`是`keywords（关键字）`按一定比例构成的集合。  
@@ -577,12 +574,12 @@ plt.tight_layout()
 plt.show()
 ```
 
-## 18.在每个句子中找到主要话题
+## 18.在每个句子中找到主要话题（Finding the dominant topic in each sentence）
 主题建模的一个实际应用是确定给定文档的主题。
 
 为了找到这个，我们找到该文档中贡献百分比最高的主题编号。
 
-下面的函数很好地将此信息聚合在一个可呈现的表中。format_topics_sentences()
+下面的函数很好地将此信息聚合在一个可呈现的表中。`format_topics_sentences()`
 
 
 ```python
@@ -619,8 +616,8 @@ df_dominant_topic.columns = ['Document_No', 'Dominant_Topic', 'Topic_Perc_Contri
 df_dominant_topic.head(10)
 ```
 
-## 19.找到每个主题最具代表性的文件
-有时，主题关键字可能不足以理解主题的含义。因此，为了帮助理解该主题，您可以找到给定主题最有贡献的文档，并通过阅读该文档来推断该主题。呼！
+## 19.找到每个主题最具代表性的文件（Find the most representative document for each topic）
+有时，主题关键字(topic keywords)可能不足以理解主题的含义。因此，为了帮助理解该主题，您可以找到给定主题最有代表性的的文档(document)，并通过阅读该文档来推断该主题。
 
 
 ```python
@@ -644,8 +641,8 @@ sent_topics_sorteddf_mallet.columns = ['Topic_Num', "Topic_Perc_Contrib", "Keywo
 sent_topics_sorteddf_mallet.head()
 ```
 
-## 20.主题文件分发
-最后，我们希望了解主题的数量和分布，以判断讨论的范围。下表公开了该信息。
+## 20.将主题分发给各文档（Topic distribution across documents）
+最后，我们希望了解主题的数量和分布，以判断讨论的范围。
 
 
 ```python
@@ -810,7 +807,9 @@ doc_topic = model.transform(corpus_with_id)
 numpy.savetxt("guidedlda.csv", doc_topic, delimiter=",")
 ```
 
-## 21.结论
-我们开始了解建模可以做什么主题。我们使用Gensim的LDA构建了一个基本主题模型，并使用pyLDAvis可视化主题。然后我们构建了mallet的LDA实现。您了解了如何使用一致性分数找到最佳主题数量，以及如何理解如何选择最佳模型。
+## 21.总结（Conclusion）
+从了解主题建模可以做什么入手，我们使用Gensim的LDA构建了一个基本主题模型，并用pyLDAvis使主题可视化。
 
-最后，我们看到了如何聚合和呈现结果，以产生可能更具可操作性的见解。
+然后我们构建了基于mallet的LDA实现。您了解了如何使用相干性分数(coherence scores)找到最佳主题数量，以及如何理解如何选择最佳模型。
+
+最后，我们看到了如何整合(aggregate)和呈现(present)结果，以产生可能更具可操作性(actionable)的见解。
