@@ -23,7 +23,7 @@ Latent Dirichlet Allocation（LDA）是一种流行的主题建模算法，在Py
 - 文本预处理的质量
 - 找到最佳主题数量的策略
 
-本教程试图解决这两个问题。
+本例试图解决这两个问题。
 
 ## 0.目录
 1. 简介
@@ -133,7 +133,7 @@ Q:当我说主题时，它实际上是什么？以及如何表示？
 A:一个主题只不过是典型代表的**主导关键词(dominant keywords)** 集合。
 只需查看关键字，您就可以确定主题的内容。 
 
-以下是获得良好**分离主题(segregation topics)**的关键因素：
+以下是获得良好**分离主题(segregation topics)** 的关键因素：
 - 文本处理的质量。
 - 文本谈论的各种主题。
 - 主题建模算法的选择。
@@ -321,7 +321,7 @@ lda_model.save('model10.gensim')
 
 ## 13.查看LDA模型中的主题（View the topics in LDA model）
 
-其中每个topic是keyword的组合，并且每个keyword对topic贡献一定的**权重(weightage)**。
+其中每个topic是keyword的组合，并且每个keyword对topic贡献一定的**权重(weightage)** 。
 
 您可以使用`lda_model.print_topics()`看到每个topic的keyword以及每个keyword的权重 ，如下所示。
 
