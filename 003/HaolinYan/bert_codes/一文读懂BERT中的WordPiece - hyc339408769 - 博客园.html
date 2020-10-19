@@ -1,0 +1,1071 @@
+<!DOCTYPE html>
+<!-- saved from url=(0047)https://www.cnblogs.com/huangyc/p/10223075.html -->
+<html lang="zh-cn"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="origin">
+    <meta name="description" content="1. 前言 2018年最火的论文要属google的BERT，不过今天我们不介绍BERT的模型，而是要介绍BERT中的一个小模块WordPiece。 2. WordPiece原理 现在基本性能好一些的N">
+    <meta property="og:description" content="1. 前言 2018年最火的论文要属google的BERT，不过今天我们不介绍BERT的模型，而是要介绍BERT中的一个小模块WordPiece。 2. WordPiece原理 现在基本性能好一些的N">
+    <meta http-equiv="Cache-Control" content="no-transform">
+    <meta http-equiv="Cache-Control" content="no-siteapp">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>一文读懂BERT中的WordPiece - hyc339408769 - 博客园</title>
+    <link id="favicon" rel="shortcut icon" href="https://common.cnblogs.com/favicon.svg" type="image/svg+xml">
+    
+    <link rel="stylesheet" href="./一文读懂BERT中的WordPiece - hyc339408769 - 博客园_files/blog-common.min.css">
+    <link id="MainCss" rel="stylesheet" href="./一文读懂BERT中的WordPiece - hyc339408769 - 博客园_files/bundle-codinglife.min.css">
+    
+    <link id="mobile-style" media="only screen and (max-width: 767px)" type="text/css" rel="stylesheet" href="./一文读懂BERT中的WordPiece - hyc339408769 - 博客园_files/bundle-codinglife-mobile.min.css">
+    
+    <link type="application/rss+xml" rel="alternate" href="https://www.cnblogs.com/huangyc/rss">
+    <link type="application/rsd+xml" rel="EditURI" href="https://www.cnblogs.com/huangyc/rsd.xml">
+    <link type="application/wlwmanifest+xml" rel="wlwmanifest" href="https://www.cnblogs.com/huangyc/wlwmanifest.xml">
+    <script src="./一文读懂BERT中的WordPiece - hyc339408769 - 博客园_files/osd.js.下载"></script><script async="" src="./一文读懂BERT中的WordPiece - hyc339408769 - 博客园_files/analytics.js.下载"></script><script>
+        var currentBlogId = 439866;
+        var currentBlogApp = 'huangyc';
+        var cb_enable_mathjax = true;
+        var isLogined = false;
+        var isBlogOwner = false;
+        var skinName = 'CodingLife';
+        var visitorUserId = '';
+    </script>
+        <script>
+            var currentPostDateAdded = '2019-01-04 11:48';
+        </script>
+    <script src="./一文读懂BERT中的WordPiece - hyc339408769 - 博客园_files/jquery-2.2.0.min.js.下载"></script>
+    <script src="./一文读懂BERT中的WordPiece - hyc339408769 - 博客园_files/blog-common.min.js.下载"></script>
+    <script type="text/x-mathjax-config;executed=true">
+        MathJax.Hub.Config({
+        tex2jax: { inlineMath: [['$','$'], ['\\(','\\)']], processClass: 'math', processEscapes: true },
+        TeX: {
+        equationNumbers: { autoNumber: ['AMS'], useLabelIds: true },
+        extensions: ['extpfeil.js', 'mediawiki-texvc.js'],
+        Macros: {bm: "\\boldsymbol"}
+        },
+        'HTML-CSS': { linebreaks: { automatic: true } },
+        SVG: { linebreaks: { automatic: true } }
+        });
+    </script>
+    <script src="./一文读懂BERT中的WordPiece - hyc339408769 - 博客园_files/MathJax.js.下载"></script>
+    
+<style type="text/css">.MathJax_Hover_Frame {border-radius: .25em; -webkit-border-radius: .25em; -moz-border-radius: .25em; -khtml-border-radius: .25em; box-shadow: 0px 0px 15px #83A; -webkit-box-shadow: 0px 0px 15px #83A; -moz-box-shadow: 0px 0px 15px #83A; -khtml-box-shadow: 0px 0px 15px #83A; border: 1px solid #A6D ! important; display: inline-block; position: absolute}
+.MathJax_Menu_Button .MathJax_Hover_Arrow {position: absolute; cursor: pointer; display: inline-block; border: 2px solid #AAA; border-radius: 4px; -webkit-border-radius: 4px; -moz-border-radius: 4px; -khtml-border-radius: 4px; font-family: 'Courier New',Courier; font-size: 9px; color: #F0F0F0}
+.MathJax_Menu_Button .MathJax_Hover_Arrow span {display: block; background-color: #AAA; border: 1px solid; border-radius: 3px; line-height: 0; padding: 4px}
+.MathJax_Hover_Arrow:hover {color: white!important; border: 2px solid #CCC!important}
+.MathJax_Hover_Arrow:hover span {background-color: #CCC!important}
+</style><style type="text/css">#MathJax_About {position: fixed; left: 50%; width: auto; text-align: center; border: 3px outset; padding: 1em 2em; background-color: #DDDDDD; color: black; cursor: default; font-family: message-box; font-size: 120%; font-style: normal; text-indent: 0; text-transform: none; line-height: normal; letter-spacing: normal; word-spacing: normal; word-wrap: normal; white-space: nowrap; float: none; z-index: 201; border-radius: 15px; -webkit-border-radius: 15px; -moz-border-radius: 15px; -khtml-border-radius: 15px; box-shadow: 0px 10px 20px #808080; -webkit-box-shadow: 0px 10px 20px #808080; -moz-box-shadow: 0px 10px 20px #808080; -khtml-box-shadow: 0px 10px 20px #808080; filter: progid:DXImageTransform.Microsoft.dropshadow(OffX=2, OffY=2, Color='gray', Positive='true')}
+#MathJax_About.MathJax_MousePost {outline: none}
+.MathJax_Menu {position: absolute; background-color: white; color: black; width: auto; padding: 2px; border: 1px solid #CCCCCC; margin: 0; cursor: default; font: menu; text-align: left; text-indent: 0; text-transform: none; line-height: normal; letter-spacing: normal; word-spacing: normal; word-wrap: normal; white-space: nowrap; float: none; z-index: 201; box-shadow: 0px 10px 20px #808080; -webkit-box-shadow: 0px 10px 20px #808080; -moz-box-shadow: 0px 10px 20px #808080; -khtml-box-shadow: 0px 10px 20px #808080; filter: progid:DXImageTransform.Microsoft.dropshadow(OffX=2, OffY=2, Color='gray', Positive='true')}
+.MathJax_MenuItem {padding: 2px 2em; background: transparent}
+.MathJax_MenuArrow {position: absolute; right: .5em; padding-top: .25em; color: #666666; font-size: .75em}
+.MathJax_MenuActive .MathJax_MenuArrow {color: white}
+.MathJax_MenuArrow.RTL {left: .5em; right: auto}
+.MathJax_MenuCheck {position: absolute; left: .7em}
+.MathJax_MenuCheck.RTL {right: .7em; left: auto}
+.MathJax_MenuRadioCheck {position: absolute; left: 1em}
+.MathJax_MenuRadioCheck.RTL {right: 1em; left: auto}
+.MathJax_MenuLabel {padding: 2px 2em 4px 1.33em; font-style: italic}
+.MathJax_MenuRule {border-top: 1px solid #CCCCCC; margin: 4px 1px 0px}
+.MathJax_MenuDisabled {color: GrayText}
+.MathJax_MenuActive {background-color: Highlight; color: HighlightText}
+.MathJax_MenuDisabled:focus, .MathJax_MenuLabel:focus {background-color: #E8E8E8}
+.MathJax_ContextMenu:focus {outline: none}
+.MathJax_ContextMenu .MathJax_MenuItem:focus {outline: none}
+#MathJax_AboutClose {top: .2em; right: .2em}
+.MathJax_Menu .MathJax_MenuClose {top: -10px; left: -10px}
+.MathJax_MenuClose {position: absolute; cursor: pointer; display: inline-block; border: 2px solid #AAA; border-radius: 18px; -webkit-border-radius: 18px; -moz-border-radius: 18px; -khtml-border-radius: 18px; font-family: 'Courier New',Courier; font-size: 24px; color: #F0F0F0}
+.MathJax_MenuClose span {display: block; background-color: #AAA; border: 1.5px solid; border-radius: 18px; -webkit-border-radius: 18px; -moz-border-radius: 18px; -khtml-border-radius: 18px; line-height: 0; padding: 8px 0 6px}
+.MathJax_MenuClose:hover {color: white!important; border: 2px solid #CCC!important}
+.MathJax_MenuClose:hover span {background-color: #CCC!important}
+.MathJax_MenuClose:hover:focus {outline: none}
+</style><style type="text/css">.MathJax_Preview .MJXf-math {color: inherit!important}
+</style><style type="text/css">.MJX_Assistive_MathML {position: absolute!important; top: 0; left: 0; clip: rect(1px, 1px, 1px, 1px); padding: 1px 0 0 0!important; border: 0!important; height: 1px!important; width: 1px!important; overflow: hidden!important; display: block!important; -webkit-touch-callout: none; -webkit-user-select: none; -khtml-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none}
+.MJX_Assistive_MathML.MJX_Assistive_MathML_Block {width: 100%!important}
+</style><style type="text/css">#MathJax_Zoom {position: absolute; background-color: #F0F0F0; overflow: auto; display: block; z-index: 301; padding: .5em; border: 1px solid black; margin: 0; font-weight: normal; font-style: normal; text-align: left; text-indent: 0; text-transform: none; line-height: normal; letter-spacing: normal; word-spacing: normal; word-wrap: normal; white-space: nowrap; float: none; -webkit-box-sizing: content-box; -moz-box-sizing: content-box; box-sizing: content-box; box-shadow: 5px 5px 15px #AAAAAA; -webkit-box-shadow: 5px 5px 15px #AAAAAA; -moz-box-shadow: 5px 5px 15px #AAAAAA; -khtml-box-shadow: 5px 5px 15px #AAAAAA; filter: progid:DXImageTransform.Microsoft.dropshadow(OffX=2, OffY=2, Color='gray', Positive='true')}
+#MathJax_ZoomOverlay {position: absolute; left: 0; top: 0; z-index: 300; display: inline-block; width: 100%; height: 100%; border: 0; padding: 0; margin: 0; background-color: white; opacity: 0; filter: alpha(opacity=0)}
+#MathJax_ZoomFrame {position: relative; display: inline-block; height: 0; width: 0}
+#MathJax_ZoomEventTrap {position: absolute; left: 0; top: 0; z-index: 302; display: inline-block; border: 0; padding: 0; margin: 0; background-color: white; opacity: 0; filter: alpha(opacity=0)}
+</style><style type="text/css">.MathJax_Preview {color: #888}
+#MathJax_Message {position: fixed; left: 1em; bottom: 1.5em; background-color: #E6E6E6; border: 1px solid #959595; margin: 0px; padding: 2px 8px; z-index: 102; color: black; font-size: 80%; width: auto; white-space: nowrap}
+#MathJax_MSIE_Frame {position: absolute; top: 0; left: 0; width: 0px; z-index: 101; border: 0px; margin: 0px; padding: 0px}
+.MathJax_Error {color: #CC0000; font-style: italic}
+</style><style type="text/css">.MJXp-script {font-size: .8em}
+.MJXp-right {-webkit-transform-origin: right; -moz-transform-origin: right; -ms-transform-origin: right; -o-transform-origin: right; transform-origin: right}
+.MJXp-bold {font-weight: bold}
+.MJXp-italic {font-style: italic}
+.MJXp-scr {font-family: MathJax_Script,'Times New Roman',Times,STIXGeneral,serif}
+.MJXp-frak {font-family: MathJax_Fraktur,'Times New Roman',Times,STIXGeneral,serif}
+.MJXp-sf {font-family: MathJax_SansSerif,'Times New Roman',Times,STIXGeneral,serif}
+.MJXp-cal {font-family: MathJax_Caligraphic,'Times New Roman',Times,STIXGeneral,serif}
+.MJXp-mono {font-family: MathJax_Typewriter,'Times New Roman',Times,STIXGeneral,serif}
+.MJXp-largeop {font-size: 150%}
+.MJXp-largeop.MJXp-int {vertical-align: -.2em}
+.MJXp-math {display: inline-block; line-height: 1.2; text-indent: 0; font-family: 'Times New Roman',Times,STIXGeneral,serif; white-space: nowrap; border-collapse: collapse}
+.MJXp-display {display: block; text-align: center; margin: 1em 0}
+.MJXp-math span {display: inline-block}
+.MJXp-box {display: block!important; text-align: center}
+.MJXp-box:after {content: " "}
+.MJXp-rule {display: block!important; margin-top: .1em}
+.MJXp-char {display: block!important}
+.MJXp-mo {margin: 0 .15em}
+.MJXp-mfrac {margin: 0 .125em; vertical-align: .25em}
+.MJXp-denom {display: inline-table!important; width: 100%}
+.MJXp-denom > * {display: table-row!important}
+.MJXp-surd {vertical-align: top}
+.MJXp-surd > * {display: block!important}
+.MJXp-script-box > *  {display: table!important; height: 50%}
+.MJXp-script-box > * > * {display: table-cell!important; vertical-align: top}
+.MJXp-script-box > *:last-child > * {vertical-align: bottom}
+.MJXp-script-box > * > * > * {display: block!important}
+.MJXp-mphantom {visibility: hidden}
+.MJXp-munderover, .MJXp-munder {display: inline-table!important}
+.MJXp-over {display: inline-block!important; text-align: center}
+.MJXp-over > * {display: block!important}
+.MJXp-munderover > *, .MJXp-munder > * {display: table-row!important}
+.MJXp-mtable {vertical-align: .25em; margin: 0 .125em}
+.MJXp-mtable > * {display: inline-table!important; vertical-align: middle}
+.MJXp-mtr {display: table-row!important}
+.MJXp-mtd {display: table-cell!important; text-align: center; padding: .5em 0 0 .5em}
+.MJXp-mtr > .MJXp-mtd:first-child {padding-left: 0}
+.MJXp-mtr:first-child > .MJXp-mtd {padding-top: 0}
+.MJXp-mlabeledtr {display: table-row!important}
+.MJXp-mlabeledtr > .MJXp-mtd:first-child {padding-left: 0}
+.MJXp-mlabeledtr:first-child > .MJXp-mtd {padding-top: 0}
+.MJXp-merror {background-color: #FFFF88; color: #CC0000; border: 1px solid #CC0000; padding: 1px 3px; font-style: normal; font-size: 90%}
+.MJXp-scale0 {-webkit-transform: scaleX(.0); -moz-transform: scaleX(.0); -ms-transform: scaleX(.0); -o-transform: scaleX(.0); transform: scaleX(.0)}
+.MJXp-scale1 {-webkit-transform: scaleX(.1); -moz-transform: scaleX(.1); -ms-transform: scaleX(.1); -o-transform: scaleX(.1); transform: scaleX(.1)}
+.MJXp-scale2 {-webkit-transform: scaleX(.2); -moz-transform: scaleX(.2); -ms-transform: scaleX(.2); -o-transform: scaleX(.2); transform: scaleX(.2)}
+.MJXp-scale3 {-webkit-transform: scaleX(.3); -moz-transform: scaleX(.3); -ms-transform: scaleX(.3); -o-transform: scaleX(.3); transform: scaleX(.3)}
+.MJXp-scale4 {-webkit-transform: scaleX(.4); -moz-transform: scaleX(.4); -ms-transform: scaleX(.4); -o-transform: scaleX(.4); transform: scaleX(.4)}
+.MJXp-scale5 {-webkit-transform: scaleX(.5); -moz-transform: scaleX(.5); -ms-transform: scaleX(.5); -o-transform: scaleX(.5); transform: scaleX(.5)}
+.MJXp-scale6 {-webkit-transform: scaleX(.6); -moz-transform: scaleX(.6); -ms-transform: scaleX(.6); -o-transform: scaleX(.6); transform: scaleX(.6)}
+.MJXp-scale7 {-webkit-transform: scaleX(.7); -moz-transform: scaleX(.7); -ms-transform: scaleX(.7); -o-transform: scaleX(.7); transform: scaleX(.7)}
+.MJXp-scale8 {-webkit-transform: scaleX(.8); -moz-transform: scaleX(.8); -ms-transform: scaleX(.8); -o-transform: scaleX(.8); transform: scaleX(.8)}
+.MJXp-scale9 {-webkit-transform: scaleX(.9); -moz-transform: scaleX(.9); -ms-transform: scaleX(.9); -o-transform: scaleX(.9); transform: scaleX(.9)}
+.MathJax_PHTML .noError {vertical-align: ; font-size: 90%; text-align: left; color: black; padding: 1px 3px; border: 1px solid}
+</style><script src="./一文读懂BERT中的WordPiece - hyc339408769 - 博客园_files/pubads_impl_2020100601.js.下载" async=""></script><link rel="preload" href="./一文读懂BERT中的WordPiece - hyc339408769 - 博客园_files/f(5).txt" as="script"><script type="text/javascript" src="./一文读懂BERT中的WordPiece - hyc339408769 - 博客园_files/f(5).txt"></script><link rel="preload" href="./一文读懂BERT中的WordPiece - hyc339408769 - 博客园_files/f(6).txt" as="script"><script type="text/javascript" src="./一文读懂BERT中的WordPiece - hyc339408769 - 博客园_files/f(6).txt"></script><link rel="prefetch" href="https://ea7b66619c65bec98f72c49c17ca9946.safeframe.googlesyndication.com/safeframe/1-0-37/html/container.html"><link rel="prefetch" href="https://tpc.googlesyndication.com/safeframe/1-0-37/html/container.html"></head>
+<body class="vsc-initialized"><div id="MathJax_Message" style="display: none;"></div>
+    <a name="top"></a>
+    <div id="top_nav" class="navbar">
+        <nav id="nav_main" class="navbar-main">
+            <ul id="nav_left" class="navbar-list navbar-left">
+                <li class="navbar-branding">
+                    <a href="https://www.cnblogs.com/" title="开发者的网上家园"><img src="./一文读懂BERT中的WordPiece - hyc339408769 - 博客园_files/logo.svg" alt="博客园Logo"></a>
+                </li>
+                <li><a href="https://www.cnblogs.com/" onclick="ga(&#39;send&#39;, &#39;event&#39;, &#39;Link&#39;, &#39;click&#39;, &#39;skin-navbar-sitehome&#39;)">首页</a></li>
+                <li><a href="https://news.cnblogs.com/" onclick="ga(&#39;send&#39;, &#39;event&#39;, &#39;Link&#39;, &#39;click&#39;, &#39;skin-navbar-news&#39;)">新闻</a></li>
+                <li><a href="https://q.cnblogs.com/" onclick="ga(&#39;send&#39;, &#39;event&#39;, &#39;Link&#39;, &#39;click&#39;, &#39;skin-navbar-q&#39;)">博问</a></li>
+                <li><a id="nav_brandzone" href="https://brands.cnblogs.com/" onclick="ga(&#39;send&#39;, &#39;event&#39;, &#39;Link&#39;, &#39;click&#39;, &#39;skin-navbar-brands&#39;)">专区</a></li>
+                <li><a href="https://ing.cnblogs.com/" onclick="ga(&#39;send&#39;, &#39;event&#39;, &#39;Link&#39;, &#39;click&#39;, &#39;skin-navbar-ing&#39;)">闪存</a></li>
+                <li><a href="https://edu.cnblogs.com/" onclick="ga(&#39;send&#39;, &#39;event&#39;, &#39;Link&#39;, &#39;click&#39;, &#39;skin-navbar-edu&#39;)">班级</a></li>
+            </ul>
+            <ul id="nav_right" class="navbar-list navbar-right">
+                <li>
+                    <form id="zzk_search" class="navbar-search" action="https://zzk.cnblogs.com/s" method="get">
+                        <input name="w" id="zzk_search_input" placeholder="代码改变世界" type="text" tabindex="3">
+                        <button type="submit" id="zzk_search_button">
+                            <img src="./一文读懂BERT中的WordPiece - hyc339408769 - 博客园_files/search.svg" alt="搜索">
+                        </button>
+                    </form>
+                </li>
+                <li id="navbar_login_status" class="navbar-list">
+                    <a id="navblog-myblog-icon" class="navbar-user-info navbar-blog" href="https://passport.cnblogs.com/GetBlogApplyStatus.aspx" alt="我的博客" title="我的博客" style="display: none;">
+                        <img id="myblog_icon" class="navbar-icon" src="./一文读懂BERT中的WordPiece - hyc339408769 - 博客园_files/myblog.svg" alt="我的博客">
+                    </a>
+                    <a class="navbar-user-info navbar-message navbar-icon-wrapper" href="https://msg.cnblogs.com/" alt="短消息" title="短消息" style="display: none;">
+                        <img id="msg_icon" class="navbar-icon" src="./一文读懂BERT中的WordPiece - hyc339408769 - 博客园_files/message.svg" alt="短消息">
+                        <span id="msg_count" style="display: none"></span>
+                    </a>
+                    <div id="user_info" class="navbar-user-info dropdown" style="display: none;">
+                        <a class="dropdown-button" href="https://home.cnblogs.com/">
+                            <img id="user_icon" class="navbar-avatar" src="./一文读懂BERT中的WordPiece - hyc339408769 - 博客园_files/avatar-default.svg" alt="用户头像">
+                        </a>
+                        <div class="dropdown-menu">
+                            <a id="navblog-myblog-text" href="https://passport.cnblogs.com/GetBlogApplyStatus.aspx">我的博客</a>
+                            <a href="https://home.cnblogs.com/">我的园子</a>
+                            <a href="https://account.cnblogs.com/settings/account">账号设置</a>
+                            <a href="javascript:void(0)" onclick="logout();">退出登录</a>
+                        </div>
+                    </div>
+                    <a class="navbar-anonymous" href="https://account.cnblogs.com/signup/" style="display: inline;">注册</a>
+                    <a class="navbar-anonymous" href="https://account.cnblogs.com/signin/?returnUrl=https://www.cnblogs.com/" style="display: inline;">登录</a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+
+    
+    
+<!--done-->
+<div id="home">
+<div id="header">
+	<div id="blogTitle">
+        <a id="lnkBlogLogo" href="https://www.cnblogs.com/huangyc/"><img id="blogLogo" src="./一文读懂BERT中的WordPiece - hyc339408769 - 博客园_files/logo.gif" alt="返回主页"></a>		
+		
+<!--done-->
+<h1><a id="Header1_HeaderTitle" class="headermaintitle HeaderMainTitle" href="https://www.cnblogs.com/huangyc/">人工智站</a>
+</h1>
+<h2>
+
+</h2>
+
+
+
+
+		
+	</div><!--end: blogTitle 博客的标题和副标题 -->
+	<div id="navigator">
+		
+<ul id="navList">
+<li><a id="blog_nav_sitehome" class="menu" href="https://www.cnblogs.com/">
+博客园</a>
+</li>
+<li>
+<a id="blog_nav_myhome" class="menu" href="https://www.cnblogs.com/huangyc/">
+首页</a>
+</li>
+<li>
+
+
+</li>
+<li>
+<a id="blog_nav_contact" class="menu" href="https://msg.cnblogs.com/send/hyc339408769">
+联系</a></li>
+<li>
+<a id="blog_nav_rss" class="menu" href="javascript:void(0)" data-rss="https://www.cnblogs.com/huangyc/rss/">
+订阅</a>
+<!--<partial name="./Shared/_XmlLink.cshtml" model="Model" /></li>--></li>
+<li>
+<a id="blog_nav_admin" class="menu" href="https://i.cnblogs.com/">
+管理</a>
+</li>
+</ul>
+
+
+		<div class="blogStats">
+			
+			<span id="stats_post_count">随笔 - 
+100&nbsp; </span>
+<span id="stats_article_count">文章 - 
+0&nbsp; </span>
+<span id="stats-comment_count">评论 - 
+31</span>
+
+			
+		</div><!--end: blogStats -->
+	</div><!--end: navigator 博客导航栏 -->
+</div><!--end: header 头部 -->
+
+<div id="main">
+	<div id="mainContent">
+	<div class="forFlow">
+		<div id="post_detail">
+    <!--done-->
+    <div id="topics">
+        <div class="post">
+            <h1 class="postTitle">
+                
+<a id="cb_post_title_url" class="postTitle2 vertical-middle" href="https://www.cnblogs.com/huangyc/p/10223075.html">
+    <span>一文读懂BERT中的WordPiece</span>
+    
+
+
+</a>
+
+            </h1>
+            <div class="clear"></div>
+            <div class="postBody">
+                
+<div id="cnblogs_post_body" class="blogpost-body cnblogs-markdown"><p><a target="_blank" href="https://github.com/SmallVagetable/machine_learning_python">完整机器学习实现代码GitHub</a><br>欢迎转载，转载请注明出处<a class="uri" href="https://www.cnblogs.com/huangyc/p/10223075.html">https://www.cnblogs.com/huangyc/p/10223075.html</a><br>欢迎沟通交流： 339408769@qq.com</p><hr><a name="_labelTop"></a><div id="navCategory"><h1><b>0. 目录</b></h1><ul><li><a href="https://www.cnblogs.com/huangyc/p/10223075.html#_label0">1. 前言</a></li><li><a href="https://www.cnblogs.com/huangyc/p/10223075.html#_label1">2. WordPiece原理</a></li><li><a href="https://www.cnblogs.com/huangyc/p/10223075.html#_label2">3. BPE算法</a></li><li><a href="https://www.cnblogs.com/huangyc/p/10223075.html#_label3">4. 学习资料</a></li><li><a href="https://www.cnblogs.com/huangyc/p/10223075.html#_label4">5. 总结</a></li></ul></div><p>&nbsp;</p><hr style="height:1px;border:none;border-top:1px dashed #0066CC;">
+    <div style="text-align: right;"><a href="https://www.cnblogs.com/huangyc/p/10223075.html#_labelTop" style="color:#f68a33">回到顶部</a><a name="_label0"></a></div><h1 id="1-前言">1. 前言</h1>
+<p>2018年最火的论文要属google的BERT，不过今天我们不介绍BERT的模型，而是要介绍BERT中的一个小模块WordPiece。</p>
+<div style="text-align: right;"><a href="https://www.cnblogs.com/huangyc/p/10223075.html#_labelTop" style="color:#f68a33">回到顶部</a><a name="_label1"></a></div><h1 id="2-wordpiece原理">2. WordPiece原理</h1>
+<p>现在基本性能好一些的NLP模型，例如OpenAI GPT，google的BERT，在数据预处理的时候都会有WordPiece的过程。WordPiece字面理解是把word拆成piece一片一片，其实就是这个意思。</p>
+<p>WordPiece的一种主要的实现方式叫做BPE（Byte-Pair Encoding）双字节编码。</p>
+<p>BPE的过程可以理解为把一个单词再拆分，使得我们的此表会变得精简，并且寓意更加清晰。</p>
+<p>比如"loved","loving","loves"这三个单词。其实本身的语义都是“爱”的意思，但是如果我们以单词为单位，那它们就算不一样的词，在英语中不同后缀的词非常的多，就会使得词表变的很大，训练速度变慢，训练的效果也不是太好。</p>
+<p>BPE算法通过训练，能够把上面的3个单词拆分成"lov","ed","ing","es"几部分，这样可以把词的本身的意思和时态分开，有效的减少了词表的数量。</p>
+<div style="text-align: right;"><a href="https://www.cnblogs.com/huangyc/p/10223075.html#_labelTop" style="color:#f68a33">回到顶部</a><a name="_label2"></a></div><h1 id="3-bpe算法">3. BPE算法</h1>
+<p>BPE的大概训练过程：首先将词分成一个一个的字符，然后在词的范围内统计字符对出现的次数，每次将次数最多的字符对保存起来，直到循环次数结束。</p>
+<p>我们模拟一下BPE算法。</p>
+<p>我们原始词表如下：</p>
+<p>{'l o w e r ': 2, 'n e w e s t ': 6, 'w i d e s t ': 3, 'l o w ': 5}</p>
+<p>其中的key是词表的单词拆分层字母，再加代表结尾，value代表词出现的频率。</p>
+<p>下面我们每一步在整张词表中找出频率最高相邻序列，并把它合并，依次循环。</p>
+<pre><code class="hljs javascript">原始词表 {<span class="hljs-string">'l o w e r &lt;/w&gt;'</span>: <span class="hljs-number">2</span>, <span class="hljs-string">'n e w e s t &lt;/w&gt;'</span>: <span class="hljs-number">6</span>, <span class="hljs-string">'w i d e s t &lt;/w&gt;'</span>: <span class="hljs-number">3</span>, <span class="hljs-string">'l o w &lt;/w&gt;'</span>: <span class="hljs-number">5</span>}
+出现最频繁的序列 (<span class="hljs-string">'s'</span>, <span class="hljs-string">'t'</span>) <span class="hljs-number">9</span>
+合并最频繁的序列后的词表 {<span class="hljs-string">'n e w e st &lt;/w&gt;'</span>: <span class="hljs-number">6</span>, <span class="hljs-string">'l o w e r &lt;/w&gt;'</span>: <span class="hljs-number">2</span>, <span class="hljs-string">'w i d e st &lt;/w&gt;'</span>: <span class="hljs-number">3</span>, <span class="hljs-string">'l o w &lt;/w&gt;'</span>: <span class="hljs-number">5</span>}
+出现最频繁的序列 (<span class="hljs-string">'e'</span>, <span class="hljs-string">'st'</span>) <span class="hljs-number">9</span>
+合并最频繁的序列后的词表 {<span class="hljs-string">'l o w e r &lt;/w&gt;'</span>: <span class="hljs-number">2</span>, <span class="hljs-string">'l o w &lt;/w&gt;'</span>: <span class="hljs-number">5</span>, <span class="hljs-string">'w i d est &lt;/w&gt;'</span>: <span class="hljs-number">3</span>, <span class="hljs-string">'n e w est &lt;/w&gt;'</span>: <span class="hljs-number">6</span>}
+出现最频繁的序列 (<span class="hljs-string">'est'</span>, <span class="hljs-string">'&lt;/w&gt;'</span>) <span class="hljs-number">9</span>
+合并最频繁的序列后的词表 {<span class="hljs-string">'w i d est&lt;/w&gt;'</span>: <span class="hljs-number">3</span>, <span class="hljs-string">'l o w e r &lt;/w&gt;'</span>: <span class="hljs-number">2</span>, <span class="hljs-string">'n e w est&lt;/w&gt;'</span>: <span class="hljs-number">6</span>, <span class="hljs-string">'l o w &lt;/w&gt;'</span>: <span class="hljs-number">5</span>}
+出现最频繁的序列 (<span class="hljs-string">'l'</span>, <span class="hljs-string">'o'</span>) <span class="hljs-number">7</span>
+合并最频繁的序列后的词表 {<span class="hljs-string">'w i d est&lt;/w&gt;'</span>: <span class="hljs-number">3</span>, <span class="hljs-string">'lo w e r &lt;/w&gt;'</span>: <span class="hljs-number">2</span>, <span class="hljs-string">'n e w est&lt;/w&gt;'</span>: <span class="hljs-number">6</span>, <span class="hljs-string">'lo w &lt;/w&gt;'</span>: <span class="hljs-number">5</span>}
+出现最频繁的序列 (<span class="hljs-string">'lo'</span>, <span class="hljs-string">'w'</span>) <span class="hljs-number">7</span>
+合并最频繁的序列后的词表 {<span class="hljs-string">'w i d est&lt;/w&gt;'</span>: <span class="hljs-number">3</span>, <span class="hljs-string">'low e r &lt;/w&gt;'</span>: <span class="hljs-number">2</span>, <span class="hljs-string">'n e w est&lt;/w&gt;'</span>: <span class="hljs-number">6</span>, <span class="hljs-string">'low &lt;/w&gt;'</span>: <span class="hljs-number">5</span>}
+出现最频繁的序列 (<span class="hljs-string">'n'</span>, <span class="hljs-string">'e'</span>) <span class="hljs-number">6</span>
+合并最频繁的序列后的词表 {<span class="hljs-string">'w i d est&lt;/w&gt;'</span>: <span class="hljs-number">3</span>, <span class="hljs-string">'low e r &lt;/w&gt;'</span>: <span class="hljs-number">2</span>, <span class="hljs-string">'ne w est&lt;/w&gt;'</span>: <span class="hljs-number">6</span>, <span class="hljs-string">'low &lt;/w&gt;'</span>: <span class="hljs-number">5</span>}
+出现最频繁的序列 (<span class="hljs-string">'w'</span>, <span class="hljs-string">'est&lt;/w&gt;'</span>) <span class="hljs-number">6</span>
+合并最频繁的序列后的词表 {<span class="hljs-string">'w i d est&lt;/w&gt;'</span>: <span class="hljs-number">3</span>, <span class="hljs-string">'low e r &lt;/w&gt;'</span>: <span class="hljs-number">2</span>, <span class="hljs-string">'ne west&lt;/w&gt;'</span>: <span class="hljs-number">6</span>, <span class="hljs-string">'low &lt;/w&gt;'</span>: <span class="hljs-number">5</span>}
+出现最频繁的序列 (<span class="hljs-string">'ne'</span>, <span class="hljs-string">'west&lt;/w&gt;'</span>) <span class="hljs-number">6</span>
+合并最频繁的序列后的词表 {<span class="hljs-string">'w i d est&lt;/w&gt;'</span>: <span class="hljs-number">3</span>, <span class="hljs-string">'low e r &lt;/w&gt;'</span>: <span class="hljs-number">2</span>, <span class="hljs-string">'newest&lt;/w&gt;'</span>: <span class="hljs-number">6</span>, <span class="hljs-string">'low &lt;/w&gt;'</span>: <span class="hljs-number">5</span>}
+出现最频繁的序列 (<span class="hljs-string">'low'</span>, <span class="hljs-string">'&lt;/w&gt;'</span>) <span class="hljs-number">5</span>
+合并最频繁的序列后的词表 {<span class="hljs-string">'w i d est&lt;/w&gt;'</span>: <span class="hljs-number">3</span>, <span class="hljs-string">'low e r &lt;/w&gt;'</span>: <span class="hljs-number">2</span>, <span class="hljs-string">'newest&lt;/w&gt;'</span>: <span class="hljs-number">6</span>, <span class="hljs-string">'low&lt;/w&gt;'</span>: <span class="hljs-number">5</span>}
+出现最频繁的序列 (<span class="hljs-string">'i'</span>, <span class="hljs-string">'d'</span>) <span class="hljs-number">3</span>
+合并最频繁的序列后的词表 {<span class="hljs-string">'w id est&lt;/w&gt;'</span>: <span class="hljs-number">3</span>, <span class="hljs-string">'newest&lt;/w&gt;'</span>: <span class="hljs-number">6</span>, <span class="hljs-string">'low&lt;/w&gt;'</span>: <span class="hljs-number">5</span>, <span class="hljs-string">'low e r &lt;/w&gt;'</span>: <span class="hljs-number">2</span>}
+</code></pre>
+<p>这样我们通过BPE得到了更加合适的词表了，这个词表可能会出现一些不是单词的组合，但是这个本身是有意义的一种形式，加速NLP的学习，提升不同词之间的语义的区分度。</p>
+<div style="text-align: right;"><a href="https://www.cnblogs.com/huangyc/p/10223075.html#_labelTop" style="color:#f68a33">回到顶部</a><a name="_label3"></a></div><h1 id="4-学习资料">4. 学习资料</h1>
+<p>介绍一些关于WordPiece和BPE的资料供同学们参考。</p>
+<ul>
+<li><a href="https://github.com/tensorflow/models" target="_blank">https://github.com/tensorflow/models</a></li>
+<li><a href="https://github.com/rsennrich/subword-nmt" target="_blank">https://github.com/rsennrich/subword-nmt</a></li>
+<li><a href="https://github.com/tensorflow/tensor2tensor/blob/master/tensor2tensor/data_generators/text_encoder_build_subword.py" target="_blank">tensor2tensor的subword</a></li>
+<li><a href="https://github.com/google/seq2seq/blob/master/bin/data/wmt16_en_de.sh" target="_blank">seq2seq的bpe</a></li>
+<li><a href="https://arxiv.org/abs/1508.07909" target="_blank">Neural Machine Translation of Rare Words with Subword Units</a></li>
+<li><a href="https://arxiv.org/pdf/1710.02187.pdf" target="_blank">BPEmb: Tokenization-free Pre-trained Subword Embeddings<br>
+in 275 Languages</a></li>
+<li><a href="https://javascript.ctolib.com/article/comments/64104" target="_blank">BPEmb使用方法</a></li>
+</ul>
+<div style="text-align: right;"><a href="https://www.cnblogs.com/huangyc/p/10223075.html#_labelTop" style="color:#f68a33">回到顶部</a><a name="_label4"></a></div><h1 id="5-总结">5. 总结</h1>
+<p>WordPiece或者BPE这么好，我们是不是哪里都能这么用呢？其实在我们的中文中不是很适用。首先我们的中文不像英文或者其他欧洲的语言一样通过空格分开，我们是连续的。其次我们的中文一个字就是一个最小的单元，无法在拆分的更小了。在中文中一般的处理方式是两中，分词和分字。理论上分词要比分字好，因为分词更加细致，语义分的更加开。分字简单，效率高，词表也很小，常用字就3000左右。</p>
+
+</div>
+<div id="MySignature"></div>
+<div class="clear"></div>
+<div id="blog_post_info_block"><div id="BlogPostCategory">
+    分类: 
+            <a href="https://www.cnblogs.com/huangyc/category/1306047.html" target="_blank">NLP</a></div>
+<div id="EntryTag">
+    标签: 
+            <a href="https://www.cnblogs.com/huangyc/tag/wordpiece/">wordpiece</a>,             <a href="https://www.cnblogs.com/huangyc/tag/bpe/">bpe</a>,             <a href="https://www.cnblogs.com/huangyc/tag/subword/">subword</a>,             <a href="https://www.cnblogs.com/huangyc/tag/%E6%96%87%E6%9C%AC%E9%A2%84%E5%A4%84%E7%90%86/">文本预处理</a></div>
+
+    <div id="blog_post_info">
+<div id="green_channel">
+        <a href="javascript:void(0);" id="green_channel_digg" onclick="DiggIt(10223075,cb_blogId,1);green_channel_success(this,&#39;谢谢推荐！&#39;);">好文要顶</a>
+        <a id="green_channel_follow" onclick="follow(&#39;993d47d0-4121-4110-2db2-08d52fc34315&#39;);" href="javascript:void(0);">关注我</a>
+    <a id="green_channel_favorite" onclick="AddToWz(cb_entryId);return false;" href="javascript:void(0);">收藏该文</a>
+    <a id="green_channel_weibo" href="javascript:void(0);" title="分享至新浪微博" onclick="ShareToTsina()"><img src="./一文读懂BERT中的WordPiece - hyc339408769 - 博客园_files/icon_weibo_24.png" alt=""></a>
+    <a id="green_channel_wechat" href="javascript:void(0);" title="分享至微信" onclick="shareOnWechat()"><img src="./一文读懂BERT中的WordPiece - hyc339408769 - 博客园_files/wechat.png" alt=""></a>
+</div>
+<div id="author_profile">
+    <div id="author_profile_info" class="author_profile_info">
+            <a href="https://home.cnblogs.com/u/huangyc/" target="_blank"><img src="./一文读懂BERT中的WordPiece - hyc339408769 - 博客园_files/sample_face.gif" class="author_avatar" alt=""></a>
+        <div id="author_profile_detail" class="author_profile_info">
+            <a href="https://home.cnblogs.com/u/huangyc/">hyc339408769</a><br>
+            <a href="https://home.cnblogs.com/u/huangyc/followees/">关注 - 1</a><br>
+            <a href="https://home.cnblogs.com/u/huangyc/followers/">粉丝 - 115</a>
+        </div>
+    </div>
+    <div class="clear"></div>
+    <div id="author_profile_honor"></div>
+    <div id="author_profile_follow">
+                <a href="javascript:void(0);" onclick="follow(&#39;993d47d0-4121-4110-2db2-08d52fc34315&#39;);return false;">+加关注</a>
+    </div>
+</div>
+<div id="div_digg">
+    <div class="diggit" onclick="votePost(10223075,&#39;Digg&#39;)">
+        <span class="diggnum" id="digg_count">2</span>
+    </div>
+    <div class="buryit" onclick="votePost(10223075,&#39;Bury&#39;)">
+        <span class="burynum" id="bury_count">0</span>
+    </div>
+    <div class="clear"></div>
+    <div class="diggword" id="digg_tips">
+    </div>
+</div>
+
+<script type="text/javascript">
+    currentDiggType = 0;
+</script></div>
+    <div class="clear"></div>
+    <div id="post_next_prev">
+
+    <a href="https://www.cnblogs.com/huangyc/archive/2004/01/13/10152296.html" class="p_n_p_prefix">« </a> 上一篇：    <a href="https://www.cnblogs.com/huangyc/archive/2004/01/13/10152296.html" title="发布于 2004-01-13 00:00">Facebook的Fairseq模型详解(Convolutional Sequence to Sequence Learning)</a>
+    <br>
+    <a href="https://www.cnblogs.com/huangyc/archive/2004/01/13/10224045.html" class="p_n_p_prefix">» </a> 下一篇：    <a href="https://www.cnblogs.com/huangyc/archive/2004/01/13/10224045.html" title="发布于 2004-01-13 00:00">1. K-Means原理解析</a>
+
+</div>
+</div>
+            </div>
+            <div class="postDesc">posted @ 
+<span id="post-date">2019-01-04 23:48</span>&nbsp;
+<a href="https://www.cnblogs.com/huangyc/">hyc339408769</a>&nbsp;
+阅读(<span id="post_view_count">19415</span>)&nbsp;
+评论(<span id="post_comment_count">4</span>)&nbsp;
+<a href="https://i.cnblogs.com/EditPosts.aspx?postid=10223075" rel="nofollow">编辑</a>&nbsp;
+<a href="javascript:void(0)" onclick="AddToWz(10223075);return false;">收藏</a></div>
+        </div>
+	    
+	    
+    </div><!--end: topics 文章、评论容器-->
+</div>
+<script src="./一文读懂BERT中的WordPiece - hyc339408769 - 博客园_files/highlight.min.js.下载"></script>
+<script>markdown_highlight();</script>
+<script>
+    var allowComments = true, cb_blogId = 439866, cb_blogApp = 'huangyc', cb_blogUserGuid = '993d47d0-4121-4110-2db2-08d52fc34315';
+    var cb_entryId = 10223075, cb_entryCreatedDate = '2019-01-04 23:48', cb_postType = 1;
+    loadViewCount(cb_entryId);
+</script><a name="!comments"></a>
+<div id="blog-comments-placeholder">
+
+<div id="comment_pager_top">
+    
+</div>
+
+<br>
+<div class="feedback_area_title">评论列表</div>
+<div class="feedbackNoItems">
+    <div class="feedbackNoItems"></div>
+</div>
+    <div class="feedbackItem">
+        <div class="feedbackListSubtitle">
+            <div class="feedbackManage">
+                &nbsp;&nbsp;
+
+<span class="comment_actions">
+    
+    
+    
+    
+</span>
+
+
+            </div>
+            
+<a href="https://www.cnblogs.com/huangyc/p/10223075.html#4255372" class="layer">#1楼</a>
+<a name="4255372" id="comment_anchor_4255372"></a>
+ 
+<span class="comment_date">2019-05-14 11:05</span>
+
+ 
+        <a id="a_comment_author_4255372" href="https://home.cnblogs.com/u/1629145/" target="_blank">henryhust</a>
+
+        </div>
+        <div class="feedbackCon">
+            
+<div id="comment_body_4255372" data-format-type="Ubb" class="blog_comment_body cnblogs-ubb">
+    原创好文，针对一个点讲的很清晰，感谢博主的分享，支持原创！
+</div>
+        <div class="comment_vote">
+            <span class="comment_error" style="color: red"></span>
+            <a href="javascript:void(0);" class="comment_digg" onclick="return voteComment(4255372, &#39;Digg&#39;, this.parentElement, false);">
+                支持(2)
+            </a>
+            <a href="javascript:void(0);" class="comment_burry" onclick="return voteComment(4255372, &#39;Bury&#39;, this.parentElement, false);">
+                反对(0)
+            </a>
+        </div>
+        
+
+        </div>
+    </div>
+    <div class="feedbackItem">
+        <div class="feedbackListSubtitle">
+            <div class="feedbackManage">
+                &nbsp;&nbsp;
+
+<span class="comment_actions">
+    
+    
+    
+    
+</span>
+
+
+            </div>
+            
+<a href="https://www.cnblogs.com/huangyc/p/10223075.html#4297142" class="layer">#2楼</a>
+<a name="4297142" id="comment_anchor_4297142"></a>
+ 
+<span class="comment_date">2019-07-10 11:50</span>
+
+ 
+        <a id="a_comment_author_4297142" href="https://www.cnblogs.com/hustwolfzzb/" target="_blank">HustWolfzzb</a>
+
+        </div>
+        <div class="feedbackCon">
+            
+<div id="comment_body_4297142" data-format-type="Ubb" class="blog_comment_body cnblogs-ubb">
+    作者你好，我想请问下，如果在某一个找出最频繁序列集合的过程中，没有找到任何其他的同频序列的话，这一轮的最频繁序列是否会保留并参与到到下一轮的合并？还是说他会直接作为一个单独的序列在最后的结果中出现？
+</div>
+        <div class="comment_vote">
+            <span class="comment_error" style="color: red"></span>
+            <a href="javascript:void(0);" class="comment_digg" onclick="return voteComment(4297142, &#39;Digg&#39;, this.parentElement, false);">
+                支持(0)
+            </a>
+            <a href="javascript:void(0);" class="comment_burry" onclick="return voteComment(4297142, &#39;Bury&#39;, this.parentElement, false);">
+                反对(0)
+            </a>
+        </div>
+        <span id="comment_4297142_avatar" style="display:none">
+            https://pic.cnblogs.com/face/1099595/20170214231815.png
+        </span>
+
+        </div>
+    </div>
+    <div class="feedbackItem">
+        <div class="feedbackListSubtitle">
+            <div class="feedbackManage">
+                &nbsp;&nbsp;
+
+<span class="comment_actions">
+    
+    
+    
+    
+</span>
+
+
+            </div>
+            
+<a href="https://www.cnblogs.com/huangyc/p/10223075.html#4299156" class="layer">#3楼</a>
+<a name="4299156" id="comment_anchor_4299156"></a>
+[<span class="louzhu">楼主</span>] 
+<span class="comment_date">2019-07-12 15:07</span>
+
+ 
+        <a id="a_comment_author_4299156" href="https://www.cnblogs.com/huangyc/" target="_blank">hyc339408769</a>
+
+        </div>
+        <div class="feedbackCon">
+            
+<div id="comment_body_4299156" data-format-type="Ubb" class="blog_comment_body cnblogs-ubb">
+    <a href="https://www.cnblogs.com/huangyc/p/10223075.html#4297142" title="查看所回复的评论" onclick="commentManager.renderComments(0,50,4297142);">@</a>
+HustWolfzzb<br>你好，按照我的理解，你的这个情况可能不存在，因为同一个词里面的一定会有两个序列的次数是一样的，如果你这个情况，那所有的词都合并了，没有拆开的词了。
+</div>
+        <div class="comment_vote">
+            <span class="comment_error" style="color: red"></span>
+            <a href="javascript:void(0);" class="comment_digg" onclick="return voteComment(4299156, &#39;Digg&#39;, this.parentElement, false);">
+                支持(0)
+            </a>
+            <a href="javascript:void(0);" class="comment_burry" onclick="return voteComment(4299156, &#39;Bury&#39;, this.parentElement, false);">
+                反对(0)
+            </a>
+        </div>
+        
+
+        </div>
+    </div>
+    <div class="feedbackItem">
+        <div class="feedbackListSubtitle">
+            <div class="feedbackManage">
+                &nbsp;&nbsp;
+
+<span class="comment_actions">
+    
+    
+    
+    
+</span>
+
+
+            </div>
+            
+<a href="https://www.cnblogs.com/huangyc/p/10223075.html#4555421" class="layer">#4楼</a>
+<a name="4555421" id="comment_anchor_4555421"></a>
+    <span id="comment-maxId" style="display: none">4555421</span>
+    <span id="comment-maxDate" style="display: none">2020/4/20 下午1:18:08</span>
+ 
+<span class="comment_date">2020-04-20 13:18</span>
+
+ 
+        <a id="a_comment_author_4555421" href="https://home.cnblogs.com/u/1489044/" target="_blank">台北蒋介石</a>
+
+        </div>
+        <div class="feedbackCon">
+            
+<div id="comment_body_4555421" data-format-type="Markdown" class="blog_comment_body cnblogs-markdown">
+    <p>循环结束的条件是频率小于某个值吗</p>
+
+</div>
+        <div class="comment_vote">
+            <span class="comment_error" style="color: red"></span>
+            <a href="javascript:void(0);" class="comment_digg" onclick="return voteComment(4555421, &#39;Digg&#39;, this.parentElement, false);">
+                支持(0)
+            </a>
+            <a href="javascript:void(0);" class="comment_burry" onclick="return voteComment(4555421, &#39;Bury&#39;, this.parentElement, false);">
+                反对(0)
+            </a>
+        </div>
+        
+
+        </div>
+    </div>
+
+<div id="comment_pager_bottom">
+    
+</div>
+
+
+</div>
+<script>
+    var commentManager = new blogCommentManager();
+    commentManager.renderComments(0);
+</script>
+<div id="comment_form" class="commentform">
+    <a name="commentform"></a>
+    <div id="divCommentShow"></div>
+    <div id="comment_nav"><span id="span_refresh_tips"></span><a href="javascript:void(0);" onclick="return RefreshCommentList();" id="lnk_RefreshComments" runat="server" clientidmode="Static">刷新评论</a><a href="https://www.cnblogs.com/huangyc/p/10223075.html#" onclick="return RefreshPage();">刷新页面</a><a href="https://www.cnblogs.com/huangyc/p/10223075.html#top">返回顶部</a></div>
+    <div id="comment_form_container" style="visibility: visible;"><div class="login_tips">
+    登录后才能发表评论，立即 <a rel="nofollow" href="javascript:void(0);" class="underline" onclick="return login(&#39;commentform&#39;);">登录</a> 或
+    <a rel="nofollow" href="javascript:void(0);" class="underline" onclick="return register();">注册</a>，
+    <a href="https://www.cnblogs.com/">访问</a> 网站首页。
+</div>
+<div class="under-comment-nav">
+    <ul>
+        <li><a href="https://www.cnblogs.com/" onclick="ga(&#39;send&#39;, &#39;event&#39;, &#39;Link&#39;, &#39;click&#39;, &#39;under-comment-nav-sitehome&#39;)">首页</a></li>
+        <li><a href="https://news.cnblogs.com/" onclick="ga(&#39;send&#39;, &#39;event&#39;, &#39;Link&#39;, &#39;click&#39;, &#39;under-comment-nav-news&#39;)">新闻</a></li>
+        <li><a href="https://q.cnblogs.com/" onclick="ga(&#39;send&#39;, &#39;event&#39;, &#39;Link&#39;, &#39;click&#39;, &#39;under-comment-nav-q&#39;)">博问</a></li>
+        <li><a href="https://brands.cnblogs.com/" onclick="ga(&#39;send&#39;, &#39;event&#39;, &#39;Link&#39;, &#39;click&#39;, &#39;under-comment-nav-brands&#39;)">专区</a></li>
+        <li><a href="https://ing.cnblogs.com/" onclick="ga(&#39;send&#39;, &#39;event&#39;, &#39;Link&#39;, &#39;click&#39;, &#39;under-comment-nav-ing&#39;)">闪存</a></li>
+        <li><a href="https://edu.cnblogs.com/" onclick="ga(&#39;send&#39;, &#39;event&#39;, &#39;Link&#39;, &#39;click&#39;, &#39;under-comment-nav-edu&#39;)">班级</a></li>
+    </ul>
+</div></div>
+    <div class="ad_text_commentbox" id="ad_text_under_commentbox"></div>
+    <div id="ad_t2"><a href="http://www.softbam.com/index.htm" target="_blank" onclick="ga(&#39;send&#39;, &#39;event&#39;, &#39;Link&#39;, &#39;click&#39;, &#39;T2-ucancode&#39;)">【推荐】超50万行C++/C#: 大型组态工控、电力仿真CAD与GIS源码库</a><br><a href="https://www.cnblogs.com/cmt/p/13704696.html" target="_blank" onclick="ga(&#39;send&#39;, &#39;event&#39;, &#39;Link&#39;, &#39;click&#39;, &#39;T2-声网征文&#39;)">【推荐】为自己发“声” —— 声网RTC征文大赛在园子里征稿</a><br><a href="https://brands.cnblogs.com/agora" target="_blank" onclick="ga(&#39;send&#39;, &#39;event&#39;, &#39;Link&#39;, &#39;click&#39;, &#39;T2-声网专区&#39;)">【推荐】未知数的距离，毫秒间的传递，声网与你实时互动</a><br><a href="https://brands.cnblogs.com/huawei" target="_blank" onclick="ga(&#39;send&#39;, &#39;event&#39;, &#39;Link&#39;, &#39;click&#39;, &#39;T2-华为专区&#39;)">【推荐】了不起的开发者，挡不住的华为，园子里的品牌专区</a><br><a href="https://www.sheca.com/assets/wwx/page3.html?site=bokeyuan" target="_blank" onclick="ga(&#39;send&#39;, &#39;event&#39;, &#39;Link&#39;, &#39;click&#39;, &#39;T2-上海CA-大家签&#39;)">【推荐】电子签名认准大家签，上海CA权威认证</a><br></div>
+    <div id="opt_under_post"></div>
+    <div id="cnblogs_c1" class="c_ad_block">
+        <div id="div-gpt-ad-1592365906576-0" style="width: 300px; height: 250px;" data-google-query-id="CJG7uPz0qOwCFQEZvAod9AUBxA"><div id="google_ads_iframe_/1090369/C1_0__container__" style="border: 0pt none; display: inline-block; width: 300px; height: 250px;"><iframe frameborder="0" src="./一文读懂BERT中的WordPiece - hyc339408769 - 博客园_files/container.html" id="google_ads_iframe_/1090369/C1_0" title="3rd party ad content" name="" scrolling="no" marginwidth="0" marginheight="0" width="300" height="250" data-is-safeframe="true" sandbox="allow-forms allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts allow-top-navigation-by-user-activation" data-google-container-id="1" style="border: 0px; vertical-align: bottom;" data-load-complete="true"></iframe></div></div>
+    </div>
+    <div id="under_post_news"><div class="recomm-block"><b>相关博文：</b><br>·  <a title="BERT模型图解" href="https://www.cnblogs.com/Milburn/p/12031501.html" target="_blank" onclick="clickRecomItmem(12031501)">BERT模型图解</a><br>·  <a title="Transformer,ELMo,GPT,到Bert" href="https://www.cnblogs.com/skykill/p/11974547.html" target="_blank" onclick="clickRecomItmem(11974547)">Transformer,ELMo,GPT,到Bert</a><br>·  <a title="BERT升级——ERNIE" href="https://www.cnblogs.com/mrdoghead/p/12046062.html" target="_blank" onclick="clickRecomItmem(12046062)">BERT升级——ERNIE</a><br>·  <a title="大名鼎鼎的BERT模型" href="https://www.cnblogs.com/mrdoghead/p/12032634.html" target="_blank" onclick="clickRecomItmem(12032634)">大名鼎鼎的BERT模型</a><br>·  <a title="transformer和bert简要学习" href="https://www.cnblogs.com/BlueBlueSea/p/12046146.html" target="_blank" onclick="clickRecomItmem(12046146)">transformer和bert简要学习</a><br>»  <a target="_blank" href="https://recomm.cnblogs.com/blogpost/10223075">更多推荐...</a></div></div>
+    <div id="cnblogs_c2" class="c_ad_block">
+        <div id="div-gpt-ad-1592366332455-0" style="width: 468px; height: 60px;" data-google-query-id="CJK7uPz0qOwCFQEZvAod9AUBxA"><div id="google_ads_iframe_/1090369/C2_0__container__" style="border: 0pt none;"><iframe id="google_ads_iframe_/1090369/C2_0" title="3rd party ad content" name="google_ads_iframe_/1090369/C2_0" width="468" height="60" scrolling="no" marginwidth="0" marginheight="0" frameborder="0" style="border: 0px; vertical-align: bottom;" data-google-container-id="2" data-load-complete="true" src="./一文读懂BERT中的WordPiece - hyc339408769 - 博客园_files/saved_resource.html"></iframe></div></div>
+    </div>
+    <div id="under_post_kb">
+<div class="itnews c_ad_block">
+    <b>最新 IT 新闻</b>:
+    <br>
+ ·          <a href="https://news.cnblogs.com/n/674593/" target="_blank">没有什么找不到！豆瓣这个神奇小组让我怀疑读心术真实存在</a>
+        <br>
+ ·          <a href="https://news.cnblogs.com/n/674592/" target="_blank">美国的造车新势力们，被中国同行甩了多少条街？</a>
+        <br>
+ ·          <a href="https://news.cnblogs.com/n/674591/" target="_blank">消息称微软要做调整：为Win10用户带来Windows 10X的设置体验</a>
+        <br>
+ ·          <a href="https://news.cnblogs.com/n/674590/" target="_blank">iPhone 12发布前：近一半美国用户认为他们手中的iPhone已支持5G</a>
+        <br>
+ ·          <a href="https://news.cnblogs.com/n/674589/" target="_blank">在法国的第6家！华为设立巴黎拉格朗日研发中心</a>
+        <br>
+    » <a href="https://news.cnblogs.com/" title="IT 新闻" target="_blank">更多新闻...</a>
+</div></div>
+    <div id="HistoryToday" class="c_ad_block"></div>
+    <script type="text/javascript">
+        fixPostBody();
+        deliverBigBanner();
+setTimeout(function() { incrementViewCount(cb_entryId); }, 50);        deliverT2();
+        deliverC1C2();
+        loadNewsAndKb();
+        loadBlogSignature();
+LoadPostCategoriesTags(cb_blogId, cb_entryId);        LoadPostInfoBlock(cb_blogId, cb_entryId, cb_blogApp, cb_blogUserGuid);
+        GetPrevNextPost(cb_entryId, cb_blogId, cb_entryCreatedDate, cb_postType);
+        loadOptUnderPost();
+        GetHistoryToday(cb_blogId, cb_blogApp, cb_entryCreatedDate);
+    </script>
+</div>
+	</div><!--end: forFlow -->
+	</div><!--end: mainContent 主体内容容器-->
+
+	<div id="sideBar">
+		<div id="sideBarMain">
+			
+<div id="sidebar_news" class="newsItem"><!--done-->
+<h3 class="catListTitle">公告</h3>
+
+<div id="blog-news">
+    
+    <div id="profile_block">
+        昵称：
+        <a href="https://home.cnblogs.com/u/huangyc/">
+            hyc339408769
+        </a>
+        <br>
+        园龄：
+        <a href="https://home.cnblogs.com/u/huangyc/" title="入园时间：2017-11-24">
+            2年10个月
+        </a>
+        <br>
+        粉丝：
+        <a href="https://home.cnblogs.com/u/huangyc/followers/">
+            115
+        </a>
+        <br>
+        关注：
+        <a href="https://home.cnblogs.com/u/huangyc/followees/">
+            1
+        </a>
+        <div id="p_b_follow">
+<a href="javascript:void(0)" onclick="follow(&#39;993d47d0-4121-4110-2db2-08d52fc34315&#39;)">+加关注</a></div>
+        <script>getFollowStatus('993d47d0-4121-4110-2db2-08d52fc34315');</script>
+    </div>
+</div>
+
+</div>
+
+<div id="sidebar_ad"></div>
+			<div id="blog-calendar" style="display:none"></div><script>loadBlogDefaultCalendar();</script>
+			
+			<div id="leftcontentcontainer">
+				<div id="blog-sidecolumn">
+<!-- 搜索 -->
+<div id="sidebar_search" class="sidebar-block">
+    
+</div>
+
+<!-- 常用链接 -->
+<div id="sidebar_shortcut" class="sidebar-block">
+    <div class="catListLink">
+<h3 class="catListTitle">
+常用链接
+</h3>
+<ul>
+    
+<li><a href="https://www.cnblogs.com/huangyc/p/" title="我的博客的随笔列表">我的随笔</a></li>
+<li><a href="https://www.cnblogs.com/huangyc/MyComments.html" title="我的发表过的评论列表">我的评论</a></li>
+<li><a href="https://www.cnblogs.com/huangyc/OtherPosts.html" title="我评论过的随笔列表">我的参与</a></li>
+<li><a href="https://www.cnblogs.com/huangyc/RecentComments.html" title="我的博客的评论列表">最新评论</a></li>
+<li><a href="https://www.cnblogs.com/huangyc/tag/" title="我的博客的标签列表">我的标签</a></li>
+
+</ul>
+</div>
+
+
+</div>
+
+<!-- 最新随笔 -->
+
+
+
+<!-- 我的标签 -->
+
+
+<!-- 积分与排名 -->
+<div id="sidebar_scorerank" class="sidebar-block">
+    <div class="catListBlogRank">
+<h3 class="catListTitle">积分与排名</h3>
+<ul>
+	<li class="liScore">
+		积分 -	
+270227
+	</li>
+	<li class="liRank">
+		排名 -	
+1854
+	</li>
+</ul>
+</div>
+
+
+
+
+</div>
+
+<!-- 随笔分类、随笔档案、文章分类、新闻分类、相册、链接 -->
+<div id="sidebar_categories">
+    
+        <div id="sidebar_postcategory" class="catListPostCategory sidebar-block">
+            <h3 class="catListTitle">
+                
+随笔分类
+<span style="font-size:11px;font-weight:normal">(129)</span>
+
+
+            </h3>
+
+
+            <ul>
+
+                        <li>
+                            
+<a href="https://www.cnblogs.com/huangyc/category/1306047.html" rel="" target="">
+    NLP(27)
+</a>
+ 
+
+                        </li>
+                        <li>
+                            
+<a href="https://www.cnblogs.com/huangyc/category/1393166.html" rel="" target="">
+    Tensorflow(4)
+</a>
+ 
+
+                        </li>
+                        <li>
+                            
+<a href="https://www.cnblogs.com/huangyc/category/1306045.html" rel="" target="">
+    机器学习(49)
+</a>
+ 
+
+                        </li>
+                        <li>
+                            
+<a href="https://www.cnblogs.com/huangyc/category/1382693.html" rel="" target="">
+    机器学习算法实现(9)
+</a>
+ 
+
+                        </li>
+                        <li>
+                            
+<a href="https://www.cnblogs.com/huangyc/category/1396585.html" rel="" target="">
+    强化学习(10)
+</a>
+ 
+
+                        </li>
+                        <li>
+                            
+<a href="https://www.cnblogs.com/huangyc/category/1306046.html" rel="" target="">
+    深度学习(26)
+</a>
+ 
+
+                        </li>
+                        <li>
+                            
+<a href="https://www.cnblogs.com/huangyc/category/1352816.html" rel="" target="">
+    知识图谱(4)
+</a>
+ 
+
+                        </li>
+
+            </ul>
+
+
+        </div>
+
+</div>
+
+<!-- 最新评论 -->
+<div id="sidebar_recentcomments" class="sidebar-block">
+    <div class="catListComment">
+<h3 class="catListTitle">最新评论</h3>
+
+	<div class="RecentCommentBlock">
+        <ul>
+                    <li class="recent_comment_title"><a href="https://www.cnblogs.com/huangyc/p/9768872.html">1. Re:FastText算法原理解析</a></li>
+                    <li class="recent_comment_body"><p>可以转载吗</p>
+</li>
+                    <li class="recent_comment_author">--cymx66688</li>
+                    <li class="recent_comment_title"><a href="https://www.cnblogs.com/huangyc/p/9706575.html">2. Re:1. 感知机原理（Perceptron）</a></li>
+                    <li class="recent_comment_body">@Jack_Fu 首先表示我也是小白，只是谈谈初步的理解。 感知机（单层）能够处理线性可分的数据，但对于线性不可分的数据（异或问题）就无法处理，通过使用两层的感知机，就可以处理了。因此，我觉得全连接的...</li>
+                    <li class="recent_comment_author">--wanghanchong</li>
+                    <li class="recent_comment_title"><a href="https://www.cnblogs.com/huangyc/p/9706575.html">3. Re:1. 感知机原理（Perceptron）</a></li>
+                    <li class="recent_comment_body">想问作者，您的这句话“前面提到它是很多算法的鼻祖，比如支持向量机算法，神经网络与深度学习。”是不是有些不严谨呢，不是我较真，是我不太懂呀！SVM和神经网络是算法可以理解，深度学习是一种思想框架，还是一...</li>
+                    <li class="recent_comment_author">--Jack_Fu</li>
+                    <li class="recent_comment_title"><a href="https://www.cnblogs.com/huangyc/p/9861453.html">4. Re:1. 语言模型</a></li>
+                    <li class="recent_comment_body"><p>建议博主,把相关的论文也给贴出来呀</p>
+</li>
+                    <li class="recent_comment_author">--letterMe</li>
+                    <li class="recent_comment_title"><a href="https://www.cnblogs.com/huangyc/p/10223075.html">5. Re:一文读懂BERT中的WordPiece</a></li>
+                    <li class="recent_comment_body"><p>循环结束的条件是频率小于某个值吗</p>
+</li>
+                    <li class="recent_comment_author">--台北蒋介石</li>
+        </ul>
+    </div>
+</div>
+
+
+</div>
+
+
+
+<!-- 阅读排行榜 -->
+<div id="sidebar_topviewedposts" class="sidebar-block">
+    <div class="catListView">
+<h3 class="catListTitle">阅读排行榜</h3>
+	<div id="TopViewPostsBlock">
+        <ul style="word-break:break-all">
+                    <li>
+                        <a href="https://www.cnblogs.com/huangyc/p/9706575.html">
+                            1. 1. 感知机原理（Perceptron）(42844)
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://www.cnblogs.com/huangyc/p/9813907.html">
+                            2. 2. Attention Is All You Need（Transformer）算法原理解析(41636)
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://www.cnblogs.com/huangyc/p/9860430.html">
+                            3. 3. ELMo算法原理解析(25048)
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://www.cnblogs.com/huangyc/p/10043749.html">
+                            4. 1. 通俗易懂解释知识图谱（Knowledge Graph）(24887)
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://www.cnblogs.com/huangyc/p/9898852.html">
+                            5. 5. BERT算法原理解析(20437)
+                        </a>
+                    </li>
+        </ul>
+    </div>
+</div>
+
+
+</div>
+
+<!-- 评论排行榜 -->
+
+
+<!-- 推荐排行榜 -->
+<div id="sidebar_topdiggedposts" class="sidebar-block">
+    
+<div id="topdigg_posts_wrap">
+    <div class="catListView">
+        <h3 class="catListTitle">推荐排行榜</h3>
+        <div id="TopDiggPostsBlock">
+            <ul style="word-break: break-all">
+                        <li>
+                            <a href="https://www.cnblogs.com/huangyc/p/10043749.html">
+                                1. 1. 通俗易懂解释知识图谱（Knowledge Graph）(7)
+                            </a>
+                        </li>
+                        <li>
+                            <a href="https://www.cnblogs.com/huangyc/p/9706575.html">
+                                2. 1. 感知机原理（Perceptron）(5)
+                            </a>
+                        </li>
+                        <li>
+                            <a href="https://www.cnblogs.com/huangyc/p/9943364.html">
+                                3. 逻辑回归（LR）和支持向量机（SVM）的区别和联系(3)
+                            </a>
+                        </li>
+                        <li>
+                            <a href="https://www.cnblogs.com/huangyc/p/10409626.html">
+                                4. 6. 从Encoder-Decoder(Seq2Seq)理解Attention的本质(2)
+                            </a>
+                        </li>
+                        <li>
+                            <a href="https://www.cnblogs.com/huangyc/p/10294583.html">
+                                5. 2. 感知机(Perceptron)基本形式和对偶形式实现(2)
+                            </a>
+                        </li>
+            </ul>
+        </div>
+    </div>
+</div>
+</div></div>
+                    <script>loadBlogSideColumn();</script>
+			</div>
+			
+		</div><!--end: sideBarMain -->
+	</div><!--end: sideBar 侧边栏容器 -->
+	<div class="clear"></div>
+	</div><!--end: main -->
+	<div class="clear"></div>
+	<div id="footer">
+		<!--done-->
+Copyright © 2020 hyc339408769
+<br><span id="poweredby">Powered by .NET Core on Kubernetes</span>
+
+
+
+	</div><!--end: footer -->
+</div><!--end: home 自定义的最大容器 -->
+
+
+    <div id="page_end_html">
+        <script type="text/javascript">  
+    var setMyBlog = {
+        setCopyright: function() {
+            //设置版权信息，转载出处自动根据页面url生成
+            var info_str = '<p><a target="_blank">完整机器学习实现代码GitHub</a><br>'+
+                '欢迎转载，转载请注明出处<a class="uri"></a><br>欢迎沟通交流： 339408769@qq.com</p><hr></hr>', 
+                info = $(info_str),
+                info_a = info.find("a"),
+                url = window.location.href;
+            $(info_a[0]).attr("href","https://github.com/SmallVagetable/machine_learning_python");
+            $(info_a[1]).attr("href",url).text(url);
+            $("#cnblogs_post_body").prepend(info);
+        },
+        setCodeRow: function(){
+            // 代码行号显示
+            var pre = $("pre"); //选中需要更改的部分
+            if(pre && pre.length){
+                pre.each(function() {
+                    var item = $(this);
+                    var lang = item.attr("class"); //判断高亮的语言
+                    item.html(item.html().replace(/<[^>]+>/g,"")); //将<pre>标签中的html标签去掉
+                    item.removeClass().addClass("brush: " + lang +";"); //根据语言添加笔刷
+                    SyntaxHighlighter.all();
+                })
+            }
+        },
+        setAtarget: function() {
+            // 博客内的链接在新窗口打开
+            $("#cnblogs_post_body a").each(function(){
+                this.target = "_blank";
+            }) 
+        },
+        setContent: function()
+        {
+            var mainContent = $('#cnblogs_post_body');
+            var h1_list = $('#cnblogs_post_body h1');//如果你的章节标题不是h1,只需要将这里的h1换掉即可
+
+            if(mainContent.length < 1)
+                return;
+         
+            if(h1_list.length>0)
+            {
+                var content = '<a name="_labelTop"></a>';
+                content += '<div id="navCategory">';
+                content += '<h1><b>0. 目录</b></h1>';
+                content += '<ul>';
+                for(var i=0; i<h1_list.length; i++)
+                {
+                    var go_to_top = '<div style="text-align: right;"><a href="#_labelTop" style="color:#f68a33">回到顶部</a><a name="_label' + i + '"></a></div>';
+                    $(h1_list[i]).before(go_to_top);
+                    
+                    var h2_list = $(h1_list[i]).nextAll("h2");
+                    var li3_content = '';
+                    for(var j=0; j<h2_list.length; j++)
+                    {
+                        var tmp = $(h2_list[j]).prevAll('h1').first();
+                        if(!tmp.is(h1_list[i]))
+                            break;
+                        var li3_anchor = '<a name="_label' + i + '_' + j + '"></a>';
+                        $(h2_list[j]).before(li3_anchor);
+                        li3_content += '<li><a href="#_label' + i + '_' + j + '">' + $(h2_list[j]).text() + '</a></li>';
+                    }
+                    
+                    var li2_content = '';
+                    if(li3_content.length > 0)
+                        li2_content = '<li><a href="#_label' + i + '">' + $(h1_list[i]).text() + '</a><ul>' + li3_content + '</ul></li>';
+                    else
+                        li2_content = '<li><a href="#_label' + i + '">' + $(h1_list[i]).text() + '</a></li>';
+                    content += li2_content;
+                }
+                content += '</ul>';
+                content += '</div><p>&nbsp;</p>';
+                content += '<hr style="height:1px;border:none;border-top:1px dashed #0066CC;"/>';
+                if($('#cnblogs_post_body').length != 0 )
+                {
+                    $($('#cnblogs_post_body')[0]).prepend(content);
+                }
+            }   
+        },
+        runAll: function() {
+            /* 运行所有方法
+             * setAtarget() 博客园内标签新窗口打开
+             * setContent() 设置目录
+             * setCopyright() 设置版权信息
+             * setCodeRow() 代码行号显示
+             */ 
+            this.setAtarget(); 
+            this.setContent();
+            this.setCopyright();
+            //this.setCodeRow();
+        }
+    }
+    setMyBlog.runAll();
+</script>
+    </div>
+
+
+<iframe id="google_osd_static_frame_2295866328490" name="google_osd_static_frame" style="display: none; width: 0px; height: 0px;" src="./一文读懂BERT中的WordPiece - hyc339408769 - 博客园_files/saved_resource(1).html"></iframe></body></html>
