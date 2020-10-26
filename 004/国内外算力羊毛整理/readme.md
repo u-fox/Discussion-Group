@@ -24,7 +24,7 @@
 - 报名飞浆举办的比赛，**经工作人员电话确认** ，可以获得【专属算力】（一般为100小时，有效期30天）
 ![](./assets/aistudio3.png)
 
-### 1.2 DSW(Data Service Workshop)
+### 1.2 DSW(Data Science Workshop)
 1) 官网：https://dsw-dev.data.aliyun.com/#/  
 ![](./assets/dsw.png)
 
